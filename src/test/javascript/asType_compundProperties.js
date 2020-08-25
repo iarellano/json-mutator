@@ -1,6 +1,8 @@
 'use strict'
 
 var rewire = require('rewire');
+var chai = require('chai');
+var should = chai.should();
 var assert = require('assert');
 
 var app = rewire('../../main/javascript/transformer.js');
@@ -20,7 +22,9 @@ describe('feature: transform value to boolean', function() {
         };
         var map = {
             firstName: "givenName",
-            lastName: "surname"
+            lastName: {
+                name: "surname"
+            }
         };
         var transformedObject = transform(source,  map);
         // console.log(jsonDiff.diff(transformedObject, target));

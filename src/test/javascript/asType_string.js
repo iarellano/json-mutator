@@ -1,11 +1,11 @@
+'use strict'
+
 var rewire = require('rewire');
 var chai = require('chai');
 var should = chai.should();
 
 var app = rewire('../../main/javascript/transformer.js');
-
-asType = app.__get__('asType');
-
+var asType = app.__get__('asType');
 
 describe('feature: transform value to string', function() {
 

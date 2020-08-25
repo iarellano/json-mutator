@@ -7,45 +7,78 @@ var source = {
 };
 
 var map = {
-    firstName: "givenName",
-    familyName: {
-        name: "names",
+    giveName: "fistName",
+    lastName: {
+        source: "familyName",
         type: "object",
         properties: {
-            lastName: "surname"
+            surname: "lastName"
         }
-
     },
-    secondLastName: {
-        name: "motherName"
+    motherName: {
+        source: "secondLastName",
+        type: "string"
     }
 };
 
 console.log(JSON.stringify(transform(source, map), null, 4));
 
+function isSimpleType(mapping) {
+    return typeof mapping === 'string'
+        || !mapping.hasOwnProperty('type')
+        || (mapping.type !== 'object' && mapping.type !== 'array')
+}
+
+function getPropertyName(mapping) {
+    return typeof mapping === 'string' ? mapping : mapping.source;
+}
+
+function getSimpleValue(srcObject, mapping) {
+
+    if (typeof mapping === 'string' && srcObject.hasOwnProperty(mapping)) {
+        return srcObject[mapping];
+    }
+    if (mapping.type !== 'object' && mapping.type !== 'array') {
+        if (mapping.name && srcObject.hasOwnProperty(mapping.source)) {
+            if (mapping.type) {
+                return asType(srcObject[mapping.source], mapping.type);
+            }
+            srcObject[mapping.property];
+        }
+    }
+}
+
 function transform(srcObject, mappings) {
     var object = {};
-    for (var property in mappings) {
-        if (srcObject.hasOwnProperty(property)) {
-            var  mapping = mappings[property];
-            if (typeof mapping === "string") {
-                if (mapping.length > 0) {
-                    object[mapping] = srcObject[property];
-                } else {
-                    throw new Error('Target property names should no be empty.')
-                }
-            } else if (typeof mapping === 'object' && !Array.isArray(mapping) && mapping) {
-                if (mapping.name &&  mapping.type !== "object" && mapping.type !== "array") {
-                    if (mapping.type) {
-                        object[mapping.name] = asType(srcObject[property], mapping.type);
-                    } else {
-                        object[mapping.name] = srcObject[property];
-                    }
-                } else if (mapping.type === 'object') {
-                    object[mapping.name] = transform(srcObject[property], mapping.properties);
-                }
+    for (var targetProperty in mappings) {
+        var mapping = mappings[targetProperty];
+        if (isSimpleType(mapping)) {
+            var value = getSimpleValue(srcObject, mapping);
+            if (value !== undefined) {
+                object[targetProperty] = value;
             }
         }
+
+        // if (srcObject.hasOwnProperty(property)) {
+        //     var  mapping = mappings[property];
+        //     if (typeof mapping === "string") {
+        //         if (mapping.length > 0) {
+        //             object[mapping] = srcObject[property];
+        //         } else {
+        //             throw new Error('Target property names should no be empty.')
+        //         }
+        //     } else if (typeof mapping === 'object' && !Array.isArray(mapping) && mapping) {
+        //         if (mapping.name &&  mapping.type !== "object" && mapping.type !== "array") {
+        //             if (mapping.type) {
+        //                 object[mapping.name] = asType(srcObject[property], mapping.type);
+        //             } else {
+        //                 object[mapping.name] = srcObject[property];
+        //             }
+        //         } else if (mapping.type === 'object') {
+        //             object[mapping.name] = transform(srcObject[property], mapping.properties);
+        //         }
+        //     }
+        // }
     }
     return object;
 }

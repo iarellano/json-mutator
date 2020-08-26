@@ -13,10 +13,12 @@ var source = {
     familyName: {
         lastName: "Arellano",
         motherName: {
-            name: "Delgado"
+            name: "Delgado",
+            name2: "Delgado2"
         }
     },
-    secondLastName: "10.5"
+    secondLastName: "10.5",
+    surname: "Delgado"
 };
 
 var map = {
@@ -38,6 +40,50 @@ var map = {
                 surname: "lastName"
             }
         },
+        newProperty: {
+            type: 'object',
+            properties: {
+                subNewProperty: {
+                    type: "object",
+                    properties: {
+                        IsaiasName: {
+                            source: "firstName"
+                        },
+                        IsaiasLastName: {
+                            source: "surname"
+                        }
+                    }
+                }
+            }
+        },
+        newProperty2: {
+            type: 'object',
+            properties: {
+                subNewProperty2: {
+                    type: "object",
+                    properties: {
+                        IsaiasName2: "firstName",
+                        IsaiasLastName2: "surname"
+                    }
+                }
+            }
+        },
+        newProperty2: {
+            type: 'object',
+            source: ["familyName", "motherName"],
+            properties: {
+                nestedName: {
+                    type: "object",
+                    properties: {
+                        IsaiasName2: "name",
+                        IsaiasName3: "name2",
+                        IsaiasName4: {
+                            source: "name2"
+                        }
+                    }
+                }
+            }
+        }
     }
 };
 
@@ -46,15 +92,6 @@ console.log(JSON.stringify(transform(source, map), null, 4));
 
 function transform(srcObject, mapping) {
     var pointer = arguments[2] || [srcObject];
-    print ("----------------start---------------");
-    print ("SOURCE -------------------------------");
-    printJson(srcObject);
-    print ("MAPPING -------------------------------");
-    printJson(mapping);
-    print ("POINTER -------------------------------");
-    printJson(pointer);
-    print ("----------------end---------------");
-
     if (typeof mapping === "string") {
         return srcObject[mapping];
     }
@@ -90,6 +127,7 @@ function transform(srcObject, mapping) {
                 if (!mapping.source) {
                     var object = {};
                     for (var property in mapping.properties) {
+                        // print("111111111111111111" + property + " -> " + mapping.properties[property] + "  ->  " + JSON.stringify(srcObject));
                         object[property] = transform(srcObject, mapping.properties[property], pointer);
                     }
                 } else if (srcObject[mapping.source]) {
@@ -101,13 +139,31 @@ function transform(srcObject, mapping) {
                     pointer.pop();
                 }
             } else {
-                if (mapping.source) {
-                    var source = mapping.source[0];
-                    if (srcObject[source]) {
-                        mapping.shift();
+                var thisSrcObject = srcObject;
+                for (var source in mapping.source) {
+                    thisSrcObject = thisSrcObject[mapping.source[source]];
+                    if (!thisSrcObject) {
+                        break;
+                    } else {
+                        // @TODO do something with the pointer
                     }
-                    mapping.unshift(source);
                 }
+                if (thisSrcObject) {
+                    for (var property in mapping.properties) {
+                        object[property] = transform(thisSrcObject, mapping.properties[property], pointer);
+                    }
+                }
+                // if (mapping.source.length > 1) {
+                //
+                //     pointer.push(srcObject[source]);
+                //     for (var property in mapping.properties) {
+                //         object[property] = transform(srcObject[source], mapping, pointer);
+                //     }
+                //     pointer.pop();
+                //     mapping.source.unshift(source);
+                // } else {
+                //
+                // }
             }
             return object;
         } else {

@@ -110,7 +110,6 @@
                                 }
                             },
                             "then": {
-                                "required": ["items", "type"],
                                 "properties": {
                                     "items": {
                                         "type": "object",

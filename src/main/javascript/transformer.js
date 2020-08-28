@@ -87,14 +87,73 @@ var map = {
     }
 };
 
+var s = {
+    firstName: "Isaias",
+    familyName: {
+        lastName: "Arellano",
+        motherName: {
+            name: "Delgado",
+            name2: "Delgado2"
+        }
+    },
+    secondLastName: "10.5",
+    surname: "Delgado"
+};
+
+var m = {
+    type: "object",
+    source: ["familyName", "motherName", "..", "..", "familyName"],
+    properties: {
+        fatherName: {
+            source: ["..", "lastName"]
+        },
+        givenName: {
+            source: ["..", "..", "firstName"]
+        }
+    }
+}
+
+// print("--------------------schema1--------------------------------");
+// printJson(map)
+// print("--------------------schema2--------------------------------");
+// printJson(m)
+// print("--------------------schema find--------------------------------");
+
 console.log(JSON.stringify(transform(source, map), null, 4));
+// console.log(JSON.stringify(transform(s, m), null, 4));
+
+// printJson(getSourceObject(s, m, []));
 
 
 function transform(srcObject, mapping) {
     var pointer = arguments[2] || [srcObject];
+
     if (typeof mapping === "string") {
-        return srcObject[mapping];
+        return srcObject.hasOwnProperty(mapping) ? srcObject[mapping] : srcObject[mapping];
     }
+
+    var type = mapping.type
+        ? mapping.type
+        : mapping.properties
+            ? 'object'
+            : mapping.items
+                ? 'array'
+                : null;
+
+
+    // if (type === 'object' && !mapping.properties) {
+    //     throw new Error('mapping of type "object" must have "properties" definition', mapping);
+    // }
+    //
+    // if (type === 'array' && !mapping.properties) {
+    //     throw new Error('mapping of type "array" must have "items" definition', mapping);
+    // }
+    //
+    // if (mapping.properties && mapping.items) {
+    //     throw new Error('properties and items are mutually exclusive'.concat("\r\n").concat(JSON.stringify(mapping)));
+    // }
+
+
     if (!mapping.type || (mapping.type && mapping.type != 'object' && mapping.type != 'array')) {
         if (typeof mapping.source === 'string' || Array.isArray(mapping.source) && mapping.source.length == 1) {
             var source = Array.isArray(mapping.source) ? mapping.source[0] : mapping.source;
@@ -105,15 +164,23 @@ function transform(srcObject, mapping) {
             }
         } if (Array.isArray(mapping.source)) {
             var value = null;
-            if (srcObject[mapping.source[0]]) {
+            if (srcObject[mapping.source[0]] === '..') {
+
+            } else if (srcObject[mapping.source[0]]) {
                 var thisSource = mapping.source.shift();
-                pointer.push(srcObject[thisSource]);
-                value = transform(srcObject[thisSource], mapping, pointer);
-                // @TODO add debug function
-                // printJson(value);
-                pointer.pop();
-                mapping.source.unshift(thisSource);
-                return value;
+                if (thisSource === '..') {
+                    var lastPointer = pointer.pop();
+                    value = transform(lastPointer, mapping, pointer);
+                    pointer.push(lastPointer);
+                } else {
+                    pointer.push(srcObject[thisSource]);
+                    value = transform(srcObject[thisSource], mapping, pointer);
+                    // @TODO add debug function
+                    // printJson(value);
+                    pointer.pop();
+                    mapping.source.unshift(thisSource);
+                    return value;
+                }
             }
         } else {
 
@@ -127,7 +194,6 @@ function transform(srcObject, mapping) {
                 if (!mapping.source) {
                     var object = {};
                     for (var property in mapping.properties) {
-                        // print("111111111111111111" + property + " -> " + mapping.properties[property] + "  ->  " + JSON.stringify(srcObject));
                         object[property] = transform(srcObject, mapping.properties[property], pointer);
                     }
                 } else if (srcObject[mapping.source]) {
@@ -140,12 +206,22 @@ function transform(srcObject, mapping) {
                 }
             } else {
                 var thisSrcObject = srcObject;
+                var nestedSources = 0;
+                printJson(pointer)
+                var pointerBkp = [];
+
                 for (var source in mapping.source) {
-                    thisSrcObject = thisSrcObject[mapping.source[source]];
-                    if (!thisSrcObject) {
-                        break;
+                    if (mapping.source[source] === '..') {
+                        thisSrcObject = pointer.pop();
+                        pointerBkp.unshift(thisSrcObject);
                     } else {
-                        // @TODO do something with the pointer
+                        thisSrcObject = thisSrcObject[mapping.source[source]];
+                        if (!thisSrcObject) {
+                            break;
+                        } else {
+                            nestedSources++;
+                            pointer.push(thisSrcObject);
+                        }
                     }
                 }
                 if (thisSrcObject) {
@@ -153,21 +229,44 @@ function transform(srcObject, mapping) {
                         object[property] = transform(thisSrcObject, mapping.properties[property], pointer);
                     }
                 }
-                // if (mapping.source.length > 1) {
-                //
-                //     pointer.push(srcObject[source]);
-                //     for (var property in mapping.properties) {
-                //         object[property] = transform(srcObject[source], mapping, pointer);
-                //     }
-                //     pointer.pop();
-                //     mapping.source.unshift(source);
-                // } else {
-                //
-                // }
+                print("------------------- pointer after -------------------");
+                printJson(pointer)
+                print("------------------- pointer end -------------------")
+                for (var i = 0; i < nestedSources; i++) {
+                    pointer.pop();
+                }
             }
             return object;
         } else {
             // @ Throw rule 11
+        }
+    }
+}
+
+function getSourceObject(srcObject, mapping, pointer) {
+    if (!mapping.source) {
+        return srcObject;
+    }
+    if (!Array.isArray(mapping.source)) {
+        return srcObject;
+    }
+    if (Array.isArray(mapping.source)) {
+        if (mapping.source.length > 0) {
+            var source = mapping.source.shift();
+            var sourceObject = null;
+            if (source === '..') {
+                var p = pointer.pop();
+                sourceObject = getSourceObject(p, mapping, pointer);
+                pointer.push(p);
+            } else {
+                pointer.push(srcObject);
+                sourceObject = getSourceObject(srcObject[source], mapping, pointer);
+                pointer.pop();
+            }
+            mapping.source.unshift(source);
+            return sourceObject;
+        } else {
+            return srcObject;
         }
     }
 }

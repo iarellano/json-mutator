@@ -1,0 +1,228 @@
+{
+    "type": "object",
+    "$ref": "#/definitions/RootObject",
+    "definitions": {
+        "Source": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 1
+                },
+                {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            ]
+        },
+        "Replace": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "required": [
+                        "search",
+                        "replace"
+                    ],
+                    "properties": {
+                        "search": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "replace": {
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "regex",
+                        "replace"
+                    ],
+                    "properties": {
+                        "regex": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "replace": {
+                            "type": "string"
+                        }
+                    }
+                }
+            ]
+        },
+        "Callback": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 1
+                },
+                {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            ]
+        },
+        "Property": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 1
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "object",
+                                "array"
+                            ]
+                        },
+                        "source": {
+                            "$ref": "#/definitions/Source"
+                        },
+                        "callback": {
+                            "$ref": "#/definitions/Callback"
+                        },
+                        "replace": {
+                            "$ref": "#/definitions/Replace"
+                        }
+                    },
+                    "allOf": [
+                        {
+                            "if": {
+                                "properties": {
+                                    "type": {
+                                        "const": "array"
+                                    }
+                                }
+                            },
+                            "then": {
+                                "required": ["items", "type"],
+                                "properties": {
+                                    "items": {
+                                        "type": "object",
+                                        "minProperties": 1,
+                                        "additionalProperties": {
+                                            "$ref": "#/definitions/Property"
+                                        }
+                                    }
+                                }
+                            }
+                        }, {
+                            "if": {
+                                "properties": {
+                                    "type": {
+                                        "const": "object"
+                                    }
+                                }
+                            },
+                            "then": {
+                                "required": ["properties", "type"],
+                                "properties": {
+                                    "properties": {
+                                        "minProperties": 1,
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "$ref": "#/definitions/Property"
+                                        }
+                                    }
+                                }
+                            }
+                        }, {
+                            "if": {
+                                "properties": { "type": { "const": "string" } }
+                            },
+                            "then": {
+                                "not": { "required": ["properties", "items"] }
+                            }
+                        }, {
+                            "if": {
+                                "properties": { "type": { "const": "integer" } }
+                            },
+                            "then": {
+                                "not": { "required": ["properties", "items"] }
+                            }
+                        }, {
+                            "if": {
+                                "properties": { "type": { "const": "number" } }
+                            },
+                            "then": {
+                                "not": { "required": ["properties", "items"] }
+                            }
+                        }, {
+                            "if": {
+                                "properties": { "type": { "const": "boolean" } }
+                            },
+                            "then": {
+                                "not": { "required": ["properties", "items"] }
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "RootObject": {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": ["object", "array"],
+                    "default": "object"
+                },
+                "source": {
+                    "$ref": "#/definitions/Source"
+                },
+                "callback": {
+                    "$ref": "#/definitions/Callback"
+                }
+            },
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "array"
+                    }
+                }
+            },
+            "then": {
+                "required": ["items", "type"],
+                "properties": {
+                    "items": {
+                        "type": "object",
+                        "minProperties": 1,
+                        "additionalProperties": {
+                            "$ref": "#/definitions/Property"
+                        }
+                    }
+                }
+            },
+            "else": {
+                "required": ["properties"],
+                "properties": {
+                    "properties": {
+                        "type": "object",
+                        "minProperties": 1,
+                        "additionalProperties": {
+                            "$ref": "#/definitions/Property"
+                        }
+                    }
+                }
+            },
+            "oneOf": [
+                { "required": ["properties"] },
+                { "required": ["items"] }
+            ]
+        }
+    }
+}

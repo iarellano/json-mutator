@@ -100,9 +100,7 @@ var s = {
     secondLastName: "10.5",
     surname: "Delgado",
     ar1: [
-        [
-            {"ar2:": "name"}
-        ]
+        {"ar2": "name"}
     ]
 };
 
@@ -182,13 +180,27 @@ var m2 = {
         //     type: "array",
         //     source: ["familyName", "motherName", "name"]
         // },
-        array5: {
+        array4: {
             type: "array",
             source: ["ar1"],
             items: {
                 type: "array",
                 source: "ar2"
             }
+        },
+        array5: {
+            source: ["ar1"],
+            properties: {
+                name1: {
+                    source: "ar2",
+                    type: "array"
+                }
+            }
+        }
+        ,
+        array6: {
+            type: "array",
+            source: ["ar1", "ar2"]
         }
     }
 };
@@ -199,8 +211,12 @@ var m2 = {
 // printJson(m)
 // print("--------------------schema find--------------------------------");
 
+print("----------------------------------------------------");
 // console.log(JSON.stringify(transform(source, map), null, 4));
-console.log(JSON.stringify(transform(s, m2), null, 4));
+var t = transform(s, m2);
+print("----------------------------------------------------");
+
+console.log(JSON.stringify(t, null, 4));
 
 // printJson(getSourceObject(s, m, []));
 
@@ -253,7 +269,7 @@ function transform(srcObject, mapping) {
             var source = Array.isArray(mapping.source) ? mapping.source[0] : mapping.source;
             var sourceValue = srcObject[source] ? srcObject[source] : null;
             var value = type
-                ? asType(sourceValue)
+                ? asType(sourceValue, type)
                 : sourceValue;
             return __callback(sourceValue, __replace(value, mapping), mapping);
         } else if (Array.isArray(mapping.source)) {
@@ -362,13 +378,77 @@ function transform(srcObject, mapping) {
 
         var array = null;
 
+        if (!mapping.source) {
+            if (!mapping.items) {
+                throw "if source is not provided, the items must be present"
+            }
+            if (Array.isArray(srcObject)) {
+                array = [];
+                pointer.push(srcObject);
+                for (var i = 0; i < srcObject.length; i++) {
+                    array.push(transform(srcObject[i], mapping.items, pointer));
+                }
+                pointer.pop();
+            } else if (typeof srcObject === 'object') {
+                var value = transform(srcObject, mapping.items, pointer);
+                array = value;
+            }
+        } else
+
+        if (typeof mapping.source === 'string') {
+            if (Array.isArray(srcObject)) {
+                array = [];
+                pointer.push(srcObject);
+                for (var i = 0; i < srcObject.length; i++) {
+                    array.push(transform(srcObject[i], mapping, pointer));
+                }
+                pointer.pop();
+            } else if (typeof srcObject === 'object') {
+                var value = null;
+                if (mapping.items) {
+                    pointer.push(srcObject);
+                    value = transform(srcObject[mapping.source], mapping.items, pointer);
+                    pointer.pop();
+                } else {
+                    value = srcObject[mapping.source];
+                }
+                array = value;
+            } else {
+
+            }
+        } else
+
+        if (Array.isArray(mapping.source) && mapping.source.length === 1) {
+            if (Array.isArray(srcObject)) {
+                array = [];
+                pointer.push(srcObject);
+                for (var i = 0; i < srcObject.length; i++) {
+                    array.push(transform(srcObject[i], mapping, pointer));
+                }
+                pointer.pop();
+            } else if (typeof srcObject === 'object') {
+                var value = null;
+                if (mapping.items) {
+                    pointer.push(srcObject);
+                    value = transform(srcObject[mapping.source[0]], mapping.items, pointer);
+                    pointer.pop();
+                } else {
+                    value = srcObject[mapping.source[0]];
+                }
+                array = value;
+            }
+        } else
+
+
+        // printJson(mapping.source);
+
         if (Array.isArray(mapping.source) && mapping.source.length > 1) {
             if (Array.isArray(srcObject)) {
+                pointer.push(srcObject);
                 for (var i = 0; i < srcObject.length; i++) {
-                    pointer.push(srcObject[i]);
                     array.push(transform(srcObject[i], mapping, pointer));
-                    pointer.pop();
                 }
+                pointer.pop();
             } else {
                 //@TODO check here if referencing parent node
                 var source = mapping.source.shift();
@@ -377,160 +457,8 @@ function transform(srcObject, mapping) {
                 pointer.pop();
                 mapping.source.unshift(source);
             }
-        } else if (!Array.isArray(mapping.source) || Array.isArray(mapping.source) && mapping.source.length === 1 ) {
-
-            var source = !Array.isArray(mapping.source) ? mapping.source : mapping.source[0];
-            if (!Array.isArray(srcObject) && typeof srcObject === 'object') {
-                if (mapping.items) {
-                    pointer.push(srcObject);
-                    var value = transform(srcObject, mapping.items, pointer);
-                    pointer.pop();
-                    if (Array.isArray(value)) {
-                        array = value;
-                    } else {
-                        array = [value];
-                    }
-                } else {
-                    pointer.push(srcObject);
-                    array = Array.isArray(srcObject[source]) ? srcObject[source] : [srcObject[source]];
-                }
-            } else if (Array.isArray(srcObject)) {
-                if (mapping.items) {
-                    pointer.push(srcObject);
-                    srcObject[srcObject];
-                    var value = transform(srcObject[source], mapping.items, pointer);
-                    pointer.pop();
-                    if (Array.isArray(value)) {
-                        array = value;
-                    } else {
-                        array = [value];
-                    }
-                } else {
-                    pointer.push(srcObject);
-                    array = Array.isArray(srcObject[source]) ? srcObject[source] : [srcObject[source]];
-                }
-            }
-        } else if (!mapping.source) {
-            array = [];
-            if (Array.isArray(srcObject)) {
-                if (mapping.items) {
-                    for (var i = 0; i < srcObject.length; i++) {
-                        array.push(transform(srcObject[i], mapping.items, pointer));
-                    }
-                } else {
-                    array = srcObject;
-                }
-            } else {  // Array to be created from object
-                if (mapping.items) {
-                    var value = transform(srcObject, mapping.items, pointer);
-                    if (Array.isArray(value)) {
-                        array = value;
-                    } else {
-                        array = [value];
-                    }
-                }
-            }
-        } else if (mapping.source && !mapping.items) {
-            if (!Array.isArray(mapping.source)) {
-                if (!Array.isArray(srcObject)) {
-                    pointer.push(srcObject);
-                    array = transform(srcObject[source], mapping.items, pointer);
-                    pointer.pop();
-                }
-            }
-            var source = !Array.isArray(mapping.source) ? mapping.source : mapping.source[0];
-            if (!Array.isArray(srcObject)) {
-                if (mapping.items) {
-
-                    array = transform(srcObject[source], mapping.items, pointer)
-                } else {
-
-                }
-            }
-
-
-
-        } else {
         }
-        // else if (mapping.source && !Array.isArray(mapping.source) || Array.isArray(mapping.source) && mapping.source.length === 1) {
-        //     var source = !Array.isArray(mapping.source) ? mapping.source : mapping.source[0];
-        //     if (Array.isArray(srcObject)) {
-        //
-        //     } else {
-        //
-        //     }
-        // }
-        // if (!mapping.items) {
-        //     if (!Array.isArray(mapping.source) || Array.isArray(mapping.source) && mapping.source.length === 1) {
-        //         if (!mapping.source) {
-        //             throw "mapping source is required if no items are defined. Offending mapping " + JSON.stringify(mapping);
-        //         }
-        //         var source = Array.isArray(mapping.source) ? mapping.source[0] : mapping.source;
-        //         if (source === '..') {
-        //             if (Array.isArray(srcObject)) {
-        //                 array = srcObject;
-        //             } else {
-        //                 array = [srcObject];
-        //             }
-        //             if (callback) {
-        //                 mapping.callback = callback;
-        //                 array = __callback(srcObject[source], array, mapping)
-        //             }
-        //         } else {
-        //             if (Array.isArray(srcObject[source])) {
-        //                 array = srcObject[source];
-        //             } else {
-        //                 array = [srcObject[source]];
-        //             }
-        //             if (callback) {
-        //                 mapping.callback = callback;
-        //                 array = __callback(srcObject[source], array, mapping)
-        //             }
-        //         }
-        //     } else if (Array.isArray(mapping.source)) {
-        //         var source = mapping.source.shift();
-        //         pointer.push(srcObject);
-        //         array = transform(srcObject, mapping, pointer);
-        //         pointer.pop();
-        //         mapping.source.unshift(source);
-        //     }
-        // } else {
-        //     array = [];
-        //     var object = {};
-        //     if (!mapping.source) {
-        //         if (Array.isArray(srcObject)) {
-        //             for (var i = 0; i < srcObject.length; i++) {
-        //                 array.push(transform(srcObject[i], mapping.items, pointer))
-        //             }
-        //         } else {
-        //             array = transform(srcObject, mapping.items, pointer);
-        //         }
-        //         if (callback) {
-        //             mapping.callback = callback;
-        //             array = __callback(srcObject, array, mapping)
-        //         }
-        //     } else {
-        //         var source = mapping.source.shift();
-        //         if (source === '..') {
-        //             // var pointerItem = pointer.pop();
-        //             // array = transform(srcObject, mapping, pointer);
-        //         } else {
-        //             // pointer.push(srcObject);
-        //             array = transform(srcObject, mapping, pointer);
-        //
-        //             // pointer.pop();
-        //             mapping.source.unshift(source);
-        //         }
-        //         mapping.source.unshift(source);
-        //     }
-        //     if (Array.isArray(mapping.source)) {
-        //
-        //     }
-        //
-        //
-        //
-        //
-        // }
+
         return array;
     }
 }

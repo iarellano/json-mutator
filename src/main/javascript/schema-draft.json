@@ -1,0 +1,188 @@
+{
+    "type": "object",
+    "$ref": "#/definitions/RootObject",
+    "definitions": {
+        "Source": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 1
+                },
+                {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            ]
+        },
+        "Replace": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "required": [
+                        "search",
+                        "replace"
+                    ],
+                    "properties": {
+                        "search": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "replace": {
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "regex",
+                        "replace"
+                    ],
+                    "properties": {
+                        "regex": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "replace": {
+                            "type": "string"
+                        }
+                    }
+                }
+            ]
+        },
+        "Callback": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 1
+                },
+                {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            ]
+        },
+        "SingleProperty": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+                "type": "null"
+            }
+        },
+        "BaseProperty": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "$ref": "#/definitions/Source"
+                },
+                "callback": {
+                    "$ref": "#/definitions/Callback"
+                }
+            }
+        },
+        "SimpleProperty": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseProperty"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": ["string", "integer", "number", "boolean"]
+                        }
+
+                    },
+                    "additionalProperties": false
+                },
+                {
+                    "not": {
+                        "required": ["properties", "items"]
+                    }
+                }
+            ]
+        },
+        "ObjectProperty": {
+            "type": "object",
+            "required": ["properties"],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "object"
+                },
+                "properties": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": {
+                        "$ref": "#/definitions/Property"
+                    }
+                }
+            }
+        },
+        "ArrayProperty": {
+            "type": "object",
+            "dependencies": {
+                "items": ["type"]
+            },
+            "required": ["type", "items"],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "array"
+                },
+                "items": {
+                    "$ref": "#/definitions/Property"
+                }
+            }
+        },
+        "ComplexProperty": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseProperty"
+                },
+                {
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/ObjectProperty"
+                        },
+                        {
+                            "$ref": "#/definitions/ArrayProperty"
+                        }
+                    ]
+                }
+            ]
+        },
+        "Property": {
+            "allOf": [
+                {
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/SingleProperty"
+                        },
+                        {
+                            "$ref": "#/definitions/SimpleProperty"
+                        },
+                        {
+                            "$ref": "#/definitions/ComplexProperty"
+                        }
+                    ]
+                },
+                {
+                    "minProperties": 1
+                }
+            ],
+        },
+        "RootObject": {
+            "$ref": "#/definitions/ComplexProperty"
+        }
+    }
+}

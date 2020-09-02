@@ -240,11 +240,11 @@ var m2 = {
 };
 
 
-print("----------------------------------------------------");
-console.log(JSON.stringify(transform(source, map), null, 4));
-print("----------------------------------------------------");
-console.log(JSON.stringify(transform(s, m1), null, 4));
-print("----------------------------------------------------");
+// print("----------------------------------------------------");
+// console.log(JSON.stringify(transform(source, map), null, 4));
+// print("----------------------------------------------------");
+// console.log(JSON.stringify(transform(s, m1), null, 4));
+// print("----------------------------------------------------");
 console.log(JSON.stringify(transform(s, m2), null, 4));
 
 function __replace(value, mapping) {

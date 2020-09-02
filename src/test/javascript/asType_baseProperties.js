@@ -7,9 +7,9 @@ var app = rewire('../../main/javascript/transformer.js');
 
 var transform = app.__get__('transform');
 
-describe('feature: transform value to boolean', function() {
+describe('feature: transform simple object with simple mapping', function() {
 
-    it('tranform simple object', function(done) {
+    it('tranform simple object 1', function(done) {
         var source = {
             firstName: "John",
             lastName: "Wick"
@@ -19,8 +19,11 @@ describe('feature: transform value to boolean', function() {
             surname: "Wick"
         };
         var map = {
-            firstName: "givenName",
-            lastName: "surname"
+            type: "object",
+            properties: {
+                givenName: "firstName",
+                surname: "lastName"
+            }
         };
         var transformedObject = transform(source,  map);
         // console.log(jsonDiff.diff(transformedObject, target));

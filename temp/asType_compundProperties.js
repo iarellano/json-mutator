@@ -9,6 +9,7 @@ var transform = app.__get__('transform');
 
 describe('feature: transform object to another object', function() {
 
+    console.log("Hello");
     it('tranform simple object 2', function(done) {
         var source = {
             firstName: "John",

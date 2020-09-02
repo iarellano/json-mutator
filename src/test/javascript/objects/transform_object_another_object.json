@@ -1,0 +1,41 @@
+{
+  "feature": "feature: modify object",
+  "tests": {
+    "some test to perform 1": {
+      "source": {
+        "firstName": "John",
+        "lastName": "Wick"
+      },
+      "map": {
+        "givenName": "John",
+        "surname": "Wick"
+      },
+      "target": {
+        "properties": {
+          "givenName": "firstName",
+          "surname": {
+            "source": "lastName"
+          }
+        }
+      }
+    },
+    "some test to perform 2": {
+      "source": {
+        "firstName": "John",
+        "lastName": "Wick"
+      },
+      "map": {
+        "givenName": "John",
+        "surname": "Wick"
+      },
+      "target": {
+        "properties": {
+          "givenName": "firstName",
+          "surname": {
+            "source": "lastName"
+          }
+        }
+      }
+    }
+  }
+}

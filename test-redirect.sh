@@ -5,11 +5,6 @@ Helo world
 how are you this days
 EOM
 
-echo -------
-echo $var
-echo -------
-echo "$var"
-echo -------
 while read line
 do
  echo $line

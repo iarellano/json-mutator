@@ -68,12 +68,13 @@ var map = {
                 }
             }
         },
-        newProperty2: {
+        newProperty3: {
             type: 'object',
             source: ["familyName", "motherName"],
             properties: {
                 nestedName: {
                     type: "object",
+                    // source: ["familyName", "motherName"],
                     properties: {
                         IsaiasName2: "name",
                         IsaiasName3: "name2",
@@ -150,37 +151,57 @@ var m1 = {
 var m2 = {
     type: "object",
     properties: {
-        // array1: {
-        //     type: "array",
-        //     items: {
-        //         "type": "object",
-        //         "source": ["familyName"],
-        //         "properties": {
-        //             "joinedName": "arrayName",
-        //             "surname": "lastName"
-        //         }
-        //     }
-        // },
-        // array2: {
-        //     type: "array",
-        //     items: {
-        //         "source": ["familyName", "arrayName"]
-        //     }
-        // }
-        // ,
-        // array3: {
-        //     type: "array",
-        //     items: {
-        //         "type": "array",
-        //         "source": ["familyName", "arrayName"]
-        //     }
-        // }
-        // ,
-        // array4: {
-        //     type: "array",
-        //     source: ["familyName", "motherName", "name"]
-        // },
-        array4: {
+        emptyProp: {
+            properties: {
+                innerProp: {
+                    source: ["firstName"]
+                }
+            }
+        },
+        array1: {
+            type: "array",
+            items: {
+                "type": "object",
+                "source": ["familyName"],
+                "properties": {
+                    "joinedName": "arrayName",
+                    "surname": "lastName"
+                }
+            }
+        },
+        array2_1: {
+            type: "array",
+            items: {
+                "source": ["familyName", "arrayName"]
+            }
+        },
+        array2_2: {
+            type: "array",
+            items: {
+                "source": ["familyName"]
+            }
+        }
+        ,
+        array3: {
+            type: "array",
+            callback: function(o, n, m) {
+                print("Helo navigator"); return n;
+            },
+            items: {
+                forceArray: true,
+                callback: function(o, n, m) {
+                    print("Helo home"); return n;
+                },
+                "type": "array",
+                "source": ["familyName", "arrayName"]
+            }
+        }
+        ,
+        array4_1: {
+            type: "array",
+            source: ["familyName", "motherName", "name"]
+        },
+        array4_2: {
             type: "array",
             source: ["ar1"],
             items: {
@@ -194,31 +215,37 @@ var m2 = {
                 name1: {
                     source: "ar2",
                     type: "array"
+                },
+                name2: {
+                    source: "ar2",
+                    type: "array"
                 }
             }
         }
         ,
         array6: {
+            source: ["ar1"],
+            type: "array",
+            items: {
+                source: "ar2",
+                type: "array"
+            }
+        }
+        ,
+        array7: {
             type: "array",
             source: ["ar1", "ar2"]
         }
     }
 };
 
-// print("--------------------schema1--------------------------------");
-// printJson(map)
-// print("--------------------schema2--------------------------------");
-// printJson(m)
-// print("--------------------schema find--------------------------------");
 
 print("----------------------------------------------------");
-// console.log(JSON.stringify(transform(source, map), null, 4));
-var t = transform(s, m2);
+console.log(JSON.stringify(transform(source, map), null, 4));
 print("----------------------------------------------------");
-
-console.log(JSON.stringify(t, null, 4));
-
-// printJson(getSourceObject(s, m, []));
+console.log(JSON.stringify(transform(s, m1), null, 4));
+print("----------------------------------------------------");
+console.log(JSON.stringify(transform(s, m2), null, 4));
 
 function __replace(value, mapping) {
     if (value === null) {
@@ -250,6 +277,7 @@ function __callback(sourceValue, value, mapping) {
 
 function transform(srcObject, mapping) {
     var pointer = arguments[2] || [srcObject];
+    var makeArray = arguments.length === 4 ? arguments[3] : true;
 
     if (typeof mapping === "string") {
         var value = srcObject.hasOwnProperty(mapping) ? srcObject[mapping] : null;
@@ -332,8 +360,9 @@ function transform(srcObject, mapping) {
             } else if (Array.isArray(mapping.source) && srcObject[mapping.source[0]] || srcObject[mapping.source]) {
                 // pointer.push(srcObject[mapping.source]);
                 pointer.push(srcObject);
+                var source = Array.isArray(mapping.source) ? mapping.source[0] : mapping.source;
                 for (var property in mapping.properties) {
-                    object[property] = transform(srcObject[mapping.source], mapping.properties[property], pointer);
+                    object[property] = transform(srcObject[source], mapping.properties[property], pointer);
                 }
                 pointer.pop();
                 mapping.callback = callback;
@@ -359,7 +388,7 @@ function transform(srcObject, mapping) {
                 }
             } else {
                 pointer.push(srcObject);
-                object = transform(srcObject, mapping, pointer);
+                object = transform(srcObject[source], mapping, pointer);
                 mapping.source.unshift(source);
                 pointer.pop();
                 if (callback) {
@@ -376,6 +405,9 @@ function transform(srcObject, mapping) {
         var callback = mapping.callback;
         delete mapping.callback;
 
+        var forceArray = mapping.forceArray;
+        delete mapping.forceArray;
+
         var array = null;
 
         if (!mapping.source) {
@@ -391,8 +423,12 @@ function transform(srcObject, mapping) {
                 pointer.pop();
             } else if (typeof srcObject === 'object') {
                 var value = transform(srcObject, mapping.items, pointer);
-                array = value;
+                if (!Array.isArray(value) && makeArray || forceArray)
+                     array = [value];
+                else
+                    array = value;
             }
+
         } else
 
         if (typeof mapping.source === 'string') {
@@ -407,12 +443,15 @@ function transform(srcObject, mapping) {
                 var value = null;
                 if (mapping.items) {
                     pointer.push(srcObject);
-                    value = transform(srcObject[mapping.source], mapping.items, pointer);
+                    value = transform(srcObject[mapping.source], mapping.items);
                     pointer.pop();
                 } else {
                     value = srcObject[mapping.source];
                 }
-                array = value;
+                if (!Array.isArray(value) && makeArray  || forceArray)
+                    array = [value];
+                else
+                    array = value;
             } else {
 
             }
@@ -423,7 +462,7 @@ function transform(srcObject, mapping) {
                 array = [];
                 pointer.push(srcObject);
                 for (var i = 0; i < srcObject.length; i++) {
-                    array.push(transform(srcObject[i], mapping, pointer));
+                    array.push(transform(srcObject[i], mapping, pointer, false));
                 }
                 pointer.pop();
             } else if (typeof srcObject === 'object') {
@@ -435,31 +474,36 @@ function transform(srcObject, mapping) {
                 } else {
                     value = srcObject[mapping.source[0]];
                 }
-                array = value;
+                if (!Array.isArray(value) && makeArray || forceArray)
+                    array = [value];
+                else
+                    array = value;
             }
-        } else
-
-
-        // printJson(mapping.source);
+        }
+        else
 
         if (Array.isArray(mapping.source) && mapping.source.length > 1) {
             if (Array.isArray(srcObject)) {
                 pointer.push(srcObject);
                 for (var i = 0; i < srcObject.length; i++) {
-                    array.push(transform(srcObject[i], mapping, pointer));
+                    array.push(transform(srcObject[i], mapping, pointer, false));
                 }
                 pointer.pop();
             } else {
                 //@TODO check here if referencing parent node
                 var source = mapping.source.shift();
                 pointer.push(srcObject);
-                array = transform(srcObject[source], mapping, pointer);
+                array = transform(srcObject[source], mapping, pointer, false);
                 pointer.pop();
                 mapping.source.unshift(source);
+                if (!Array.isArray(array) && makeArray || forceArray) {
+                    array = [array];
+                }
             }
         }
-
-        return array;
+        mapping.forceArray = forceArray;
+        mapping.callback = callback;
+        return __callback(srcObject, array, mapping);
     }
 }
 

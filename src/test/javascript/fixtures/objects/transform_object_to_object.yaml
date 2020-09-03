@@ -1,0 +1,171 @@
+---
+feature: "feature: object to object transformation"
+steps:
+- desc: Property to property transformation, no nested properties
+  expected:
+    givenName: John
+    surname: Wick
+  spec:
+    properties:
+      givenName: firstName
+      surname: lastName
+
+- desc: Property to property transformation, with nested properties 1
+  expected:
+    givenName: John
+    surname: Wick
+    features:
+      angry: very
+      hitman: 'yes'
+  spec:
+    properties:
+      givenName: firstName
+      surname: lastName
+      features: features
+
+- desc: Property to property transformation, with nested properties 2
+  expected:
+    givenName: John
+    surname: Wick
+    features:
+      angry: very
+      hitman: 'yes'
+  spec:
+    properties:
+      givenName: firstName
+      surname: lastName
+      features:
+        source: features
+        properties:
+          angry: angry
+          hitman: hitman
+
+- desc: Property to property transformation, with nested properties 3
+  expected:
+    givenName: John
+    surname: Wick
+    features:
+      angry: very
+      hitman: 'yes'
+  spec:
+    properties:
+      givenName: firstName
+      surname: lastName
+      features:
+        properties:
+          angry:
+            source:
+              - features
+              - angry
+          hitman:
+            source:
+            - features
+            - hitman
+
+- desc: Introduce property in between object and child elements
+  expected:
+    filmografy:
+      "John Wick - 2014":
+        cast:
+        - Keanu Reeves
+        - Ian McShane
+        - Lance Reddick
+  spec:
+    properties:
+      filmografy:
+        properties:
+          "John Wick - 2014":
+            properties:
+              cast:
+                source:
+                  - filmografy
+                  - recurrentCast
+
+- desc: Remove property in between object and child elements
+  expected:
+    filmografy:
+      - Keanu Reeves
+      - Ian McShane
+      - Lance Reddick
+  spec:
+    properties:
+      filmografy:
+        type: array
+        items:
+          source:
+          - filmografy
+          - recurrentCast
+
+- desc: Extract nested property to root object with source as an array
+  expected:
+    recurrentCast:
+    - Keanu Reeves
+    - Ian McShane
+    - Lance Reddick
+  spec:
+    properties:
+      recurrentCast:
+        type: array
+        source:
+          - filmografy
+          - recurrentCast
+
+- desc: Extract nested property to root object with source as an array and source in child object
+  expected:
+    recurrentCast:
+    - Keanu Reeves
+    - Ian McShane
+    - Lance Reddick
+  spec:
+    properties:
+      recurrentCast:
+        type: array
+        items:
+          source:
+            - filmografy
+            - recurrentCast
+
+- desc: Extract nested property to root object with source as an array and source in child object
+  expected:
+    recurrentCast:
+    - Keanu Reeves
+    - Ian McShane
+    - Lance Reddick
+  spec:
+    properties:
+      recurrentCast:
+        type: array
+        source: filmografy
+        items:
+          source: recurrentCast
+
+source:
+  firstName: John
+  lastName: Wick
+  features:
+    angry: very
+    hitman: 'yes'
+  filmografy:
+    recurrentCast:
+    - Keanu Reeves
+    - Ian McShane
+    - Lance Reddick
+    movies:
+    - John Wick:
+        characters:
+        - John Wick
+        - Winston
+        - Charon
+    - 'John Wick: Chapter 2':
+        characters:
+        - John Wick
+        - Winston
+        - Charon
+    - 'John Wick: Chapter 3 - Parabellum':
+        characters:
+        - John Wick
+        - Winston
+        - Charon
+    upcomingMovies:
+    - 'John Wick: Chapter 4'
+    - 'John Wick: Chapter 5'

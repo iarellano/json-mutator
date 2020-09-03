@@ -1,0 +1,110 @@
+---
+feature: "feature: array manipulation"
+source: {
+  "firstName": "John",
+  "familyName": {
+    "lastName": "Wick",
+    "arrayName": ["W", "i", "c", "k"],
+    "moviNames": {
+      "name1": "John Wick",
+      "name2": "John Wick - Chapter 2",
+      "name3": "John Wick - Chapter 3 - Parabellum"
+    }
+  },
+  "names": [
+    {
+      "firstName": "John",
+      "lastName": "Wick"
+    }
+  ]
+}
+steps:
+  - desc: Create array from items
+    expected:
+      newArray:
+        - spelledName:
+            - W
+            - i
+            - c
+            - k
+          surname: Wick
+    spec:
+      properties:
+        newArray:
+          items:
+            source: familyName
+            properties:
+              spelledName: arrayName
+              surname: lastName
+
+  - desc: Extract array property
+    expected:
+      newArray:
+      - W
+      - i
+      - c
+      - k
+    spec:
+      properties:
+        newArray:
+          items:
+            source:
+              - familyName
+              - arrayName
+
+  - desc: Create array from property
+    expected:
+      newArray:
+        - "familyName": {
+            "lastName": "Wick",
+            "arrayName": ["W", "i", "c", "k"],
+            "moviNames": {
+              "name1": "John Wick",
+              "name2": "John Wick - Chapter 2",
+              "name3": "John Wick - Chapter 3 - Parabellum"
+            }
+          }
+
+    spec:
+      properties:
+        newArray:
+          type: array
+          items:
+            properties:
+              familyName:
+                source: familyName
+
+  - desc: Create array from property
+    expected:
+      - "familyName": {
+          "lastName": "Wick",
+          "arrayName": ["W", "i", "c", "k"],
+          "moviNames": {
+            "name1": "John Wick",
+            "name2": "John Wick - Chapter 2",
+            "name3": "John Wick - Chapter 3 - Parabellum"
+          }
+        }
+
+    spec:
+      items:
+        properties:
+          familyName:
+            source: familyName
+
+  - desc: Problematic array
+    dump: true
+    spec:
+      source: names
+      properties:
+        firstName:
+          type: array
+          source: firstName
+          callback: return n[0];
+        lastName:
+          type: array
+          source: lastName
+          callback: return n[0];
+    expected:
+      firstName: [ "John" ]
+      lastName: [ "Wick" ]

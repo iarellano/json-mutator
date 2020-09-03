@@ -1,92 +1,19 @@
+'use strict'
+/* global console, print */
+
+// if (!console.log) {
+//     var console = console || {
+//         log: function () {
+//             print(arguments)
+//         }
+//     };
+// }
+
+var print = print || console.log;
 
 
-var print = print || function(value) { console.log(value) };
-
-// var console = console || {
-//     log: function() { print(arguments) }
-// };
 
 var printJson = function(value) { console.log(JSON.stringify(value, null, 4)) };
-
-var source = {
-    firstName: "Isaias",
-    familyName: {
-        lastName: "Arellano",
-        motherName: {
-            name: "Delgado",
-            name2: "Delgado2"
-        }
-    },
-    secondLastName: "10.5",
-    surname: "Delgado"
-};
-
-var map = {
-    type: "object",
-    properties: {
-        giveName: "firstName",
-        surname: {
-            source: ["familyName", "lastName"]
-        },
-        motherName: {
-            source: [
-                "familyName", "motherName", "name"
-            ]
-        },
-        lastName: {
-            source: "familyName",
-            type: "object",
-            properties: {
-                surname: "lastName"
-            }
-        },
-        newProperty: {
-            type: 'object',
-            properties: {
-                subNewProperty: {
-                    type: "object",
-                    properties: {
-                        IsaiasName: {
-                            source: "firstName"
-                        },
-                        IsaiasLastName: {
-                            source: "surname"
-                        }
-                    }
-                }
-            }
-        },
-        newProperty2: {
-            type: 'object',
-            properties: {
-                subNewProperty2: {
-                    type: "object",
-                    properties: {
-                        IsaiasName2: "firstName",
-                        IsaiasLastName2: "surname"
-                    }
-                }
-            }
-        },
-        newProperty3: {
-            type: 'object',
-            source: ["familyName", "motherName"],
-            properties: {
-                nestedName: {
-                    type: "object",
-                    // source: ["familyName", "motherName"],
-                    properties: {
-                        IsaiasName2: "name",
-                        IsaiasName3: "name2",
-                        IsaiasName4: {
-                            source: "name2"
-                        }
-                    }
-                }
-            }
-        }
-    }
-};
 
 var s = {
     firstName: "Isaias",
@@ -148,96 +75,7 @@ var m1 = {
     }
 };
 
-var m2 = {
-    type: "object",
-    properties: {
-        emptyProp: {
-            properties: {
-                innerProp: {
-                    source: ["firstName"]
-                }
-            }
-        },
-        array1: {
-            type: "array",
-            items: {
-                "type": "object",
-                "source": ["familyName"],
-                "properties": {
-                    "joinedName": "arrayName",
-                    "surname": "lastName"
-                }
-            }
-        },
-        array2_1: {
-            type: "array",
-            items: {
-                "source": ["familyName", "arrayName"]
-            }
-        },
-        array2_2: {
-            type: "array",
-            items: {
-                "source": ["familyName"]
-            }
-        }
-        ,
-        array3: {
-            type: "array",
-            callback: function(o, n, m) {
-                print("Helo navigator"); return n;
-            },
-            items: {
-                forceArray: true,
-                callback: function(o, n, m) {
-                    print("Helo home"); return n;
-                },
-                "type": "array",
-                "source": ["familyName", "arrayName"]
-            }
-        }
-        ,
-        array4_1: {
-            type: "array",
-            source: ["familyName", "motherName", "name"]
-        },
-        array4_2: {
-            type: "array",
-            source: ["ar1"],
-            items: {
-                type: "array",
-                source: "ar2"
-            }
-        },
-        array5: {
-            source: ["ar1"],
-            properties: {
-                name1: {
-                    source: "ar2",
-                    type: "array"
-                },
-                name2: {
-                    source: "ar2",
-                    type: "array"
-                }
-            }
-        }
-        ,
-        array6: {
-            source: ["ar1"],
-            type: "array",
-            items: {
-                source: "ar2",
-                type: "array"
-            }
-        }
-        ,
-        array7: {
-            type: "array",
-            source: ["ar1", "ar2"]
-        }
-    }
-};
+
 
 
 // print("----------------------------------------------------");
@@ -245,7 +83,61 @@ var m2 = {
 // print("----------------------------------------------------");
 // console.log(JSON.stringify(transform(s, m1), null, 4));
 // print("----------------------------------------------------");
-console.log(JSON.stringify(transform(s, m2), null, 4));
+// console.log(JSON.stringify(transform(s, m2), null, 4));
+
+//-----------------------------------------------
+//-----------------------------------------------
+var spec = {
+    "desc": "Problematic array",
+    "dumpJS": true,
+    "spec": {
+        "source": "name",
+        "properties": {
+            "firstName": {
+                "type": "array",
+                "source": "firstName"
+            },
+            "lastName": {
+                "type": "array",
+                "source": "lastName"
+            }
+        }
+    },
+    "expected": {
+        "firstName": [
+            "John"
+        ],
+        "lastName": [
+            "Wick"
+        ]
+    },
+    "source": {
+        "firstName": "John",
+        "familyName": {
+            "lastName": "Wick",
+            "arrayName": [
+                "W",
+                "i",
+                "c",
+                "k"
+            ],
+            "moviNames": {
+                "name1": "John Wick",
+                "name2": "John Wick - Chapter 2",
+                "name3": "John Wick - Chapter 3 - Parabellum"
+            }
+        },
+        "names": [
+            {
+                "firstName": "John",
+                "lastName": "Wick"
+            }
+        ]
+    }
+};
+console.log(JSON.stringify(transform(spec.source, spec.spec), null, 4));
+//-----------------------------------------------
+
 
 function __replace(value, mapping) {
     if (value === null) {

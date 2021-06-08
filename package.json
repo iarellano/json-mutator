@@ -1,0 +1,22 @@
+{
+    "version": "1.0.0",
+    "license": "MIT",
+    "devDependencies": {
+        "async": "*",
+        "eslint": "^4.9.0",
+        "eslint-config-google": "^0.9.1",
+        "apickli": "latest",
+        "fs": "latest",
+        "fs-extra": "latest",
+        "cucumber": "^1.0.0",
+        "jsonwebtoken": "latest",
+        "readline": "*",
+        "crypto-js": "latest",
+        "chai": "^4.3.4",
+        "chai-fuzzy": "^1.6.1",
+        "sinon": "^11.1.1"
+    },
+    "dependencies": {
+
+    }
+}

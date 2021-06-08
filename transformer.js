@@ -198,7 +198,7 @@ var transform = function (source, spec, options) {
             spec.before(source, spec, target, attribute);
         }
         if (!Array.isArray(source[spec.source])) {
-            throw 'Array expected for property "' + sourcePath + spec.source + '".';
+            throw 'Root value is expected to be an Array.';
         }
         copyItems(spec, source, result, '', '', options);
         if (hasCallback(spec.after)) {

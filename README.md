@@ -1,6 +1,11 @@
 # json2ajson
 Json to another json converter
 
+1. [ Usage ](#usage)
+1. [ Spec Definition ](#spec)
+1. [ Hooks ](#hooks)
+
+<a name="desc"></a>
 ## Usage
 
 ### API
@@ -42,6 +47,7 @@ Allowed native types are:
 - bool | boolean
 - string
 
+<a name="spec"></a>
 ## Spec Definition
 The specification object drive the transformer through the transformation process. The spec attempts to follow
 the Json schema structure.
@@ -143,7 +149,7 @@ With same source now we will get an array of objects:
     }
 ]
 ```
-
+<a name="hooks"></a>
 ## Hooks
 
 Depending on of the level at which the hook is defined it will allows to modify some or all of object they receive as parameters.

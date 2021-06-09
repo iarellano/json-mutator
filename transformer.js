@@ -131,7 +131,7 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
             target[attribute] = [];
             copyItems(spec, source[spec.source], target[attribute], sourcePath + spec.source + '.', '', options);
             if (hasCallback(spec.after)) {
-                spec.after(source, spec, target, attribute);
+                var result = spec.after(source, spec, target, attribute);
                 if (result !== undefined) {
                     target[attribute] = result;
                 }
@@ -167,7 +167,7 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
                 validateNativeType(spec.type, target[attribute], sourcePath + spec.source, schemaPath, schemaPath + attribute);
             }
             if (hasCallback(spec.after)) {
-                spec.after(source, spec, target, attribute);
+                var result = spec.after(source, spec, target, attribute);
                 if (result !== undefined) {
                     target[attribute] = result;
                 }

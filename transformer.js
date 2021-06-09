@@ -140,7 +140,7 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
 
         else {
 
-            var required = spec.required || options.defaultRequired;
+            var required = spec.required | options.defaultRequired;
             if (source[spec.source] === undefined && required === true) {
                 if (spec.default) {
                     target[attribute] = spec.default;
@@ -149,7 +149,7 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
                 }
             }
 
-            var allowNull = spec.nullable || options.allowNulls;
+            var allowNull = spec.nullable | options.allowNulls;
             if (source[spec.source] === null && allowNull === false) {
                 if (spec.default) {
                     target[attribute] = spec.default;

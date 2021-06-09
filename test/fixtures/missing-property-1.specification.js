@@ -8,10 +8,10 @@ var spec = {
             required: false,
             type: "string",
             source: "name",
-            default: "isaias",
+            default: null,
+            nullable: true,
             after: () => {
-                console.log("Helo here 2");
-                return 'Isaias';
+                return 'Some Random Name';
             }
         }
     }

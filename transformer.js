@@ -12,6 +12,36 @@ function hasCallback(functionToCheck) {
     return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
+function validateNativeType(type, value, sourcePath, schemaPath) {
+    switch (type) {
+        case "integer":
+        case "int":
+            if (!Number.isInteger(value)) {
+                throw 'Integer value expected for property "' + sourcePath + '".';
+            }
+            break;
+        case 'float':
+        case 'number':
+            if (isNaN(value)) {
+                throw 'Numeric value expected for property "' + sourcePath + '". Found ' + value;
+            }
+            break;
+        case 'bool':
+        case  'boolean':
+            if (value !== true && value !== false) {
+                throw 'Boolean value expected for property "' + sourcePath + '".';
+            }
+            break;
+        case 'string':
+            if (typeof value !== 'string') {
+                throw 'String value expected for property "' + sourcePath + '"';
+            }
+            break;
+        default:
+            throw 'Invalid schema type for property "' + schemaPath + '". Found ' + type;
+    }
+}
+
 function copyItems (spec, source, target, sourcePath, schemaPath, options) {
     for (var i = 0; i < source.length; i++) {
         var itemValue;
@@ -51,37 +81,6 @@ function copyItems (spec, source, target, sourcePath, schemaPath, options) {
                 target[i] = result;
             }
         }
-    }
-}
-
-
-function validateNativeType(type, value, sourcePath, schemaPath) {
-    switch (type) {
-        case "integer":
-        case "int":
-            if (!Number.isInteger(value)) {
-                throw 'Integer value expected for property "' + sourcePath + '".';
-            }
-            break;
-        case 'float':
-        case 'number':
-            if (isNaN(value)) {
-                throw 'Numeric value expected for property "' + sourcePath + '". Found ' + value;
-            }
-            break;
-        case 'bool':
-        case  'boolean':
-            if (value !== true && value !== false) {
-                throw 'Boolean value expected for property "' + sourcePath + '".';
-            }
-            break;
-        case 'string':
-            if (typeof value !== 'string') {
-                throw 'String value expected for property "' + sourcePath + '"';
-            }
-            break;
-        default:
-            throw 'Invalid schema type for property "' + schemaPath + '". Found ' + type;
     }
 }
 
@@ -214,7 +213,7 @@ var transform = function (source, spec, options) {
             throw 'Root value is expected to be an object.'
         }
         if (hasCallback(spec.before)) {
-            spec.before(source, spec, target, attribute);
+            spec.before(source, spec, result);
         }
         copyAttributes(spec.attributes, source, result, '', '', options);
         if (spec.additionalAttributes) {

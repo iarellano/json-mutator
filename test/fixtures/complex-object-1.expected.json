@@ -1,0 +1,62 @@
+{
+    "index": [
+        {
+            "ItemName": 0
+        },
+        {
+            "ItemName": 1
+        },
+        {
+            "ItemName": 2
+        },
+        {
+            "ItemName": 3
+        }
+    ],
+    "InfoPuntos": {
+        "numCantidadPuntos": 0,
+        "numImpuestosIVA": 0
+    },
+    "InfoTarjetaCredito": {
+        "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+        ],
+        "numTarjetaCredito": "string",
+        "valValorAPagar": 0,
+        "numCuotas": 0,
+        "numImpuestosIVA": null,
+        "numImpuestosConsumo": 0,
+        "numImpuestosBaseDev": 0,
+        "numPropinaOblig": 0,
+        "UbicacionCompraInfo": {
+            "numNumeroTerminal": "1",
+            "valCodigoComercio": "1",
+            "valNombreComercio": "1",
+            "valCodigoPais": "1",
+            "valCodigoDepartamento": "1",
+            "valCodigoCiudad": "1",
+            "valNombreCiudad": "1"
+        },
+        "t": "c"
+    },
+    "ComplexArray": [
+        {
+            "Individual": {
+                "FirstName": "John - 0",
+                "LastName": "Lennon"
+            }
+        },
+        {
+            "Individual": {
+                "FirstName": "Ringo - 1",
+                "LastName": "Starr"
+            }
+        }
+    ],
+    "a": "c"
+}

@@ -1,0 +1,18 @@
+[
+    {
+        "fname": "John",
+        "lname": "Lennon"
+    },
+    {
+        "fname": "Paul",
+        "lname": "McCartney"
+    },
+    {
+        "fname": "George",
+        "lname": "Harrison"
+    },
+    {
+        "fname": "Ringo",
+        "lname": "Starr"
+    }
+]

@@ -1,0 +1,28 @@
+{
+    "Beatles": [
+        {
+            "Beatle": {
+                "firstName": "John",
+                "lastName": "Lennon"
+            }
+        },
+        {
+            "Beatle": {
+                "firstName": "Paul",
+                "lastName": "McCartney"
+            }
+        },
+        {
+            "Beatle": {
+                "firstName": "George",
+                "lastName": "Harrison"
+            }
+        },
+        {
+            "Beatle": {
+                "firstName": "Ringo",
+                "lastName": "Starr"
+            }
+        }
+    ]
+}

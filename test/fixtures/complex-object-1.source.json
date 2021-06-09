@@ -1,0 +1,40 @@
+{
+    "pointsInfo": {
+        "pointsQty": 0,
+        "ivaTax": 0
+    },
+    "creditCardInfo": {
+        "creditCardId": "string",
+        "amount": 0,
+        "installments": 0,
+        "ivaTax": null,
+        "comsumptionTax": 0,
+        "taxBase": 0,
+        "tip": 0,
+        "locationInfo":{
+            "terminalId": "1",
+            "storeCode": "1",
+            "storeName": "1",
+            "countryCode": "1",
+            "stateCode": "1",
+            "cityCode": "1",
+            "cityName": "1"
+        },
+        "index": [
+            0,1,2,3,4,5
+        ]
+    },
+    "index": [
+        0,1,2,3
+    ],
+    "complexArray": [
+        {
+            "firstName": "John",
+            "lastName": "Lennon"
+        },
+        {
+            "firstName": "Ringo",
+            "lastName": "Starr"
+        }
+    ]
+}

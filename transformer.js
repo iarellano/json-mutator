@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 function isObject(spec) {
     return spec.type == "object" || spec.attributes != null;
@@ -15,12 +15,29 @@ function hasCallback(functionToCheck) {
 function copyItems (spec, source, target, sourcePath, schemaPath, options) {
     for (var i = 0; i < source.length; i++) {
         var itemValue;
-        if (spec.items) {
+
+        if (spec.items.type === "array") {
+            itemValue = [];
+            copyItems(spec.items, source[i], itemValue, sourcePath + '[' + i + ']', schemaPath, options);
+        } else if (spec.items.type === "object") {
             itemValue = {};
-            copyAttributes(spec.items, source[i], itemValue, sourcePath + '[' + i + ']', schemaPath, options)
-        } else {
-            itemValue = source[i];
+            copyAttributes(spec.items.attributes, source[i], itemValue, sourcePath + '[' + i + ']', schemaPath, options)
         }
+        else {
+            itemValue = source[i];
+            var allowNull = spec.nullable || options.allowNulls;
+            if (source[spec.source] === null && allowNull === false) {
+                if (spec.default) {
+                    itemValue = spec.default;
+                } else {
+                    throw 'Null value not allowed for property "' + sourcePath + spec.source + '".';
+                }
+            }
+            if (itemValue !== null && spec.items.type && options.enforceTypes === true) {
+                validateNativeType(spec.items.type, itemValue, sourcePath + '[' + i + ']', schemaPath + '[' + i + ']');
+            }
+        }
+
         if (spec.itemName) {
             var item = {};
             item[spec.itemName] = itemValue;
@@ -29,8 +46,42 @@ function copyItems (spec, source, target, sourcePath, schemaPath, options) {
             target.push(itemValue);
         }
         if (hasCallback(spec.itemCallback)) {
-            spec.itemCallback(source, spec, target, itemValue, i);
+            var result = spec.itemCallback(source, spec, target, itemValue, i);
+            if (result !== undefined) {
+                target[i] = result;
+            }
         }
+    }
+}
+
+
+function validateNativeType(type, value, sourcePath, schemaPath) {
+    switch (type) {
+        case "integer":
+        case "int":
+            if (!Number.isInteger(value)) {
+                throw 'Integer value expected for property "' + sourcePath + '".';
+            }
+            break;
+        case 'float':
+        case 'number':
+            if (isNaN(value)) {
+                throw 'Numeric value expected for property "' + sourcePath + '". Found ' + value;
+            }
+            break;
+        case 'bool':
+        case  'boolean':
+            if (value !== true && value !== false) {
+                throw 'Boolean value expected for property "' + sourcePath + '".';
+            }
+            break;
+        case 'string':
+            if (typeof value !== 'string') {
+                throw 'String value expected for property "' + sourcePath + '"';
+            }
+            break;
+        default:
+            throw 'Invalid schema type for property "' + schemaPath + '". Found ' + type;
     }
 }
 
@@ -64,7 +115,10 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
                 }
             }
             if (hasCallback(spec.after)) {
-                spec.after(source, spec, target, attribute);
+                var result = spec.after(source, spec, target, attribute);
+                if (result !== undefined) {
+                    target[attribute] = result;
+                }
             }
         }
 
@@ -79,6 +133,9 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
             copyItems(spec, source[spec.source], target[attribute], sourcePath + spec.source + '.', '', options);
             if (hasCallback(spec.after)) {
                 spec.after(source, spec, target, attribute);
+                if (result !== undefined) {
+                    target[attribute] = result;
+                }
             }
         }
 
@@ -108,36 +165,13 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
 
 
             if (target[attribute] !== undefined && spec.type && options.enforceTypes === true) {
-                switch (spec.type) {
-                    case "integer":
-                    case "int":
-                        if (!Number.isInteger(target[attribute])) {
-                            throw 'Integer value expected for property "' + sourcePath + spec.source + '".';
-                        }
-                        break;
-                    case 'float':
-                    case 'number':
-                        if (isNaN(target[attribute])) {
-                            throw 'Numeric value expected for property "' + sourcePath + spec.source + '". Found ' + target[attribute];
-                        }
-                        break;
-                    case 'bool':
-                    case  'boolean':
-                        if (target[attribute] !== true && target[attribute] !== false) {
-                            throw 'Boolean value expected for property "' + sourcePath + spec.source + '".';
-                        }
-                        break;
-                    case 'string':
-                        if (typeof target[attribute] !== 'string') {
-                            throw 'String value expected for property "' + sourcePath + spec.source + '"';
-                        }
-                        break;
-                    default:
-                        throw 'Invalid schema type for property "' + schemaPath + attribute + '".';
-                }
+                validateNativeType(spec.type, target[attribute], sourcePath + spec.source, schemaPath, schemaPath + attribute);
             }
             if (hasCallback(spec.after)) {
                 spec.after(source, spec, target, attribute);
+                if (result !== undefined) {
+                    target[attribute] = result;
+                }
             }
         }
     }
@@ -189,26 +223,32 @@ var transform = function (source, spec, options) {
             }
         }
         if (hasCallback(spec.after)) {
-            spec.after(source, spec, target, attribute);
+            var res = spec.after(source, spec, result);
+            if (res !== undefined) {
+                result = res;
+            }
         }
     }
     if (isArray(spec)) {
         result = [];
         if (hasCallback(spec.before)) {
-            spec.before(source, spec, target, attribute);
+            spec.before(source, spec, result);
         }
-        if (!Array.isArray(source[spec.source])) {
+        if (!Array.isArray(source)) {
             throw 'Root value is expected to be an Array.';
         }
+
         copyItems(spec, source, result, '', '', options);
         if (hasCallback(spec.after)) {
-            spec.after(source, spec, target, attribute);
+            var res = spec.after(source, spec, result);
+            if (res !== undefined) {
+                result = res;
+            }
         }
-
     }
     return result;
 };
 
-module.exports = {
-    transform: transform
-};
+if (typeof module !== 'undefined' && module.exports != null) {
+    exports.transform = transform;
+}

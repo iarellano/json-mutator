@@ -1,11 +1,11 @@
 'use strict';
 
 function isObject(spec) {
-    return spec.type == "object" || spec.attributes != null;
+    return spec.type === "object" || spec.attributes != null;
 }
 
 function isArray(spec) {
-    return spec.type == "array" || spec.items != null;
+    return spec.type === "array" || spec.items != null;
 }
 
 function hasCallback(functionToCheck) {
@@ -60,7 +60,7 @@ function copyItems (spec, source, target, sourcePath, schemaPath, options) {
                 if (spec.default) {
                     itemValue = spec.default;
                 } else {
-                    throw 'Null value not allowed for property "' + sourcePath + spec.source + '".';
+                    throw 'Null value not allowed for array item "' + sourcePath + spec.source + '".';
                 }
             }
             if (itemValue !== null && spec.items.type && options.enforceTypes === true) {
@@ -101,16 +101,34 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
 
         if (isObject(spec)) {
             target[attribute] = {};
-            if (typeof source[spec.source] !== "object" || Array.isArray(source[spec.source])) {
-                throw 'Value of property "' + sourcePath + spec.source + '"is expected to be an object.'
-            }
             if (hasCallback(spec.before)) {
                 spec.before(source, spec, target, attribute);
             }
-            copyAttributes(spec.attributes, source[spec.source], target[attribute], sourcePath + spec.source + '.', schemaPath + attribute + '.', options);
-            if (spec.additionalAttributes) {
-                for (var additionalAttribute in spec.additionalAttributes) {
-                    target[additionalAttribute] = spec.additionalAttributes[additionalAttribute];
+
+            if (source[spec.source] === undefined || source[spec.source] === null) {
+                var required = spec.required !== undefined ? spec.required : options.defaultRequired;
+                if (source[spec.source] === undefined && required === true) {
+                    if (spec.default) {
+                        target[attribute] = spec.default;
+                    } else {
+                        throw 'Missing required property "' + sourcePath + spec.source + '".';
+                    }
+                }
+                var allowNull = spec.nullable !== undefined ? spec.nullable : options.allowNulls;
+                if (source[spec.source] === null && allowNull === false) {
+                    throw 'Null value not allowed for property "' + sourcePath + spec.source + '".';
+                } else {
+                    target[attribute] = null;
+                }
+            } else {
+                if (typeof source[spec.source] !== "object" || Array.isArray(source[spec.source])) {
+                    throw 'Value of property "' + sourcePath + spec.source + '"is expected to be an object.'
+                }
+                copyAttributes(spec.attributes, source[spec.source], target[attribute], sourcePath + spec.source + '.', schemaPath + attribute + '.', options);
+                if (spec.additionalAttributes) {
+                    for (var additionalAttribute in spec.additionalAttributes) {
+                        target[additionalAttribute] = spec.additionalAttributes[additionalAttribute];
+                    }
                 }
             }
             if (hasCallback(spec.after)) {
@@ -122,14 +140,33 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
         }
 
         else if (isArray(spec)) {
+            target[attribute] = [];
             if (hasCallback(spec.before)) {
                 spec.before(source, spec, target, attribute);
             }
-            if (!Array.isArray(source[spec.source])) {
-                throw 'Array expected for property "' + sourcePath + spec.source + '".';
+
+            if (source[spec.source] === undefined || source[spec.source] === null) {
+                var required = spec.required !== undefined ? spec.required : options.defaultRequired;
+                if (source[spec.source] === undefined && required === true) {
+                    if (spec.default) {
+                        target[attribute] = spec.default;
+                    } else {
+                        throw 'Missing required property "' + sourcePath + spec.source + '".';
+                    }
+                }
+                var allowNull = spec.nullable !== undefined ? spec.nullable : options.allowNulls;
+                if (source[spec.source] === null && allowNull === false) {
+                    throw 'Null value not allowed for property "' + sourcePath + spec.source + '".';
+                } else {
+                    target[attribute] = null;
+                }
+            } else {
+                // Validate that source[spec.source] has a value and work with required or default value
+                if (!Array.isArray(source[spec.source])) {
+                    throw 'Array expected for property "' + sourcePath + spec.source + '".';
+                }
+                copyItems(spec, source[spec.source], target[attribute], sourcePath + spec.source + '.', '', options);
             }
-            target[attribute] = [];
-            copyItems(spec, source[spec.source], target[attribute], sourcePath + spec.source + '.', '', options);
             if (hasCallback(spec.after)) {
                 var result = spec.after(source, spec, target, attribute);
                 if (result !== undefined) {
@@ -137,7 +174,6 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
                 }
             }
         }
-
         else {
 
             var required = spec.required !== undefined ? spec.required : options.defaultRequired;
@@ -149,19 +185,14 @@ function copyAttributes (attributes, source, target, sourcePath, schemaPath, opt
                 }
             }
 
-            var allowNull = spec.nullable !== undefined ? spec.nullable : options.allowNulls;
-            if (source[spec.source] === null && allowNull === false) {
-                if (spec.default) {
-                    target[attribute] = spec.default;
-                } else {
-                    throw 'Null value not allowed for property "' + sourcePath + spec.source + '".';
-                }
-            }
-
             if (target[attribute] === undefined && source[spec.source] !== undefined) {
                 target[attribute] = source[spec.source];
             }
 
+            var allowNull = spec.nullable !== undefined ? spec.nullable : options.allowNulls;
+            if (source[spec.source] === null && allowNull === false) {
+                throw 'Null value not allowed for property "' + sourcePath + spec.source + '".';
+            }
 
             if (target[attribute] !== undefined && spec.type && options.enforceTypes === true) {
                 validateNativeType(spec.type, target[attribute], sourcePath + spec.source, schemaPath, schemaPath + attribute);
@@ -206,14 +237,18 @@ var transform = function (source, spec, options) {
         }
     }
 
+    if (!spec) {
+        throw 'spec null or undefined'
+    }
+
     var result;
     if (isObject(spec)) {
         result = {};
-        if (typeof source !== "object" || Array.isArray(source)) {
-            throw 'Root value is expected to be an object.'
-        }
         if (hasCallback(spec.before)) {
             spec.before(source, spec, result);
+        }
+        if (typeof source !== "object" || Array.isArray(source)) {
+            throw 'Root value is expected to be an object.'
         }
         copyAttributes(spec.attributes, source, result, '', '', options);
         if (spec.additionalAttributes) {

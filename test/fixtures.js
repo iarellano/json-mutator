@@ -34,21 +34,4 @@ describe('feature: Test fixtures', function() {
             expect(output).to.eql(expectedData);
         });
     });
-    // it('should be transformed to fixture', function(done) {
-    //
-    //     var mock = mockFactory.getMock();
-    //
-    //     mock.contextGetVariableMethod.withArgs('flow.target.basepath').returns('api');
-    //     mock.contextGetVariableMethod.withArgs('proxy.pathsuffix').returns('families');
-    //
-    //     moduleLoader.load(js, function(err) {
-    //
-    //         expect(err).to.be.undefined;
-    //
-    //         expect(mock.contextSetVariableMethod.calledWith('flow.target.basepath','api/families.ashx')).to.be.true;
-    //         expect(mock.contextSetVariableMethod.calledWith('target.copy.pathsuffix', false)).to.be.true;
-    //
-    //         done();
-    //     });
-    // });
 });
